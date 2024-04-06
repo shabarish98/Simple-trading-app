@@ -1,0 +1,93 @@
+-- Creating a table to store order details
+CREATE TABLE T_orders (
+    order_id      NUMBER(10),          
+    exchange      CHAR(3),             
+    script        VARCHAR2(30) NOT NULL, 
+    market_price  NUMBER(8,2) NOT NULL,  
+    quantity      NUMBER(10) NOT NULL,   
+    limit_price   NUMBER(8,2),           
+    stop_loss     NUMBER(8,2),           
+    create_date   TIMESTAMP NOT NULL,    
+    create_by     VARCHAR2(30) NOT NULL,
+    modified_date TIMESTAMP,             
+    modified_by   VARCHAR2(30),          
+
+    CONSTRAINT pk_order_id PRIMARY KEY (order_id),
+    CONSTRAINT chk_exchange CHECK (exchange IN ('NSE','BSE'))
+);
+
+
+-- Creating a sequence to generate unique order IDs
+CREATE SEQUENCE seq_order_id
+START WITH 1
+INCREMENT BY 1
+MAXVALUE 30;
+
+-- Creating a table to log errors
+CREATE TABLE error_log (
+    errcode     VARCHAR2(10),     
+    errmsg      VARCHAR2(50),     
+    username    VARCHAR2(40),     -- User who encountered the error
+    errtime     TIMESTAMP,        
+    blockname   VARCHAR2(30)      -- Name of the block/procedure where the error occurred
+);
+
+
+-- Creating a stored procedure to log errors
+
+CREATE OR REPLACE PROCEDURE sp_error_log(
+    p_errorcode IN VARCHAR2,
+    p_errmsg    IN VARCHAR2,
+    p_blockname IN VARCHAR2
+)
+AS
+BEGIN
+    -- Inserting error details into the error_log table
+    INSERT INTO error_log (errcode, errmsg, username, errtime, blockname)
+    VALUES (p_errorcode, p_errmsg, USER, SYSTIMESTAMP, p_blockname);
+  
+    COMMIT;
+END;
+
+
+
+-- Creating a stored procedure to place trade orders
+
+CREATE OR REPLACE PROCEDURE sp_Trade_now(
+    p_exchange     IN VARCHAR2,
+    p_script       IN VARCHAR2,
+    p_market_price IN NUMBER,
+    p_quantity     IN NUMBER,
+    p_limit_price  IN NUMBER,
+    p_stop_loss    IN NUMBER
+)
+AS
+  lv_errcode VARCHAR(30);  
+  lv_errmsg  VARCHAR(100); 
+BEGIN
+    -- Inserting trade order details into the T_orders table
+    INSERT INTO t_orders VALUES (
+        seq_order_id.nextval, 
+        p_exchange,
+        p_script,
+        p_market_price,
+        p_quantity,
+        p_limit_price,
+        p_stop_loss,
+        SYSDATE,    
+        USER,       
+        NULL,       -- Modified date initially set to NULL
+        NULL        -- Modified by initially set to NULL
+    );
+    
+    COMMIT;
+
+EXCEPTION
+
+    WHEN OTHERS THEN
+        lv_errcode := SQLCODE;               
+        lv_errmsg := SUBSTR(SQLERRM,1,30); 
+        
+        -- Logging the error using the sp_error_log procedure
+        sp_error_log(lv_errcode, lv_errmsg, 'sp_trade_now');
+END;
