@@ -1,4 +1,5 @@
 -- Creating a table to store order details
+
 CREATE TABLE T_orders (
     order_id      NUMBER(10),          
     exchange      CHAR(3),             
@@ -24,6 +25,7 @@ INCREMENT BY 1
 MAXVALUE 30;
 
 -- Creating a table to log errors
+
 CREATE TABLE error_log (
     errcode     VARCHAR2(10),     
     errmsg      VARCHAR2(50),     
