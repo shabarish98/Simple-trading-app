@@ -14,5 +14,7 @@ Scalability: Designed to handle large volumes of trade orders efficiently, with 
 
 To use Trade Order Manager:
 Database Setup: Create the database schema using the provided SQL script.
+
 Stored Procedures: Review and execute the stored procedures to interact with the database.
+
 Integration: Integrate the project with your trading application or system to manage trade orders effectively.
