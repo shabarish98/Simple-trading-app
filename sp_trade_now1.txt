@@ -81,7 +81,12 @@ BEGIN
         NULL,       -- Modified date initially set to NULL
         NULL        -- Modified by initially set to NULL
     );
-    
+
+    -- Logging the order details to a CSV file
+    file_handle := UTL_FILE.FOPEN('CSV_DIR', 'order_log.csv', 'A');
+    UTL_FILE.PUT_LINE(file_handle, seq_order_id.currval || ',' || p_exchange || ',' || p_script || ',' || p_market_price || ',' || p_quantity || ',' || p_limit_price || ',' || p_stop_loss || ',' || SYSDATE || ',' || USER);
+    UTL_FILE.FCLOSE(file_handle);
+
     COMMIT;
 
 EXCEPTION
@@ -93,3 +98,8 @@ EXCEPTION
         -- Logging the error using the sp_error_log procedure
         sp_error_log(lv_errcode, lv_errmsg, 'sp_trade_now');
 END;
+
+-- Creating Directory and Grant Permissions in Oracle
+
+CREATE OR REPLACE DIRECTORY CSV_DIR AS '/path/to/splunk/monitored/';
+GRANT READ, WRITE ON DIRECTORY CSV_DIR TO your_user;
